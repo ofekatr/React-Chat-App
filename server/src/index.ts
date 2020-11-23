@@ -7,16 +7,21 @@ const socketio = require("socket.io");
 import router from "./router";
 
 const app = express();
+const server = http.createServer(app);
+const io = socketio(server, {
+    cors: {
+        origin: "http://localhost:3000",
+        methods: ["GET", "POST"]
+    }
+});
+
 app.use(cors());
 app.use('/', router);
-
-const server = http.createServer(app);
-const io = socketio(server);
 
 const { PORT } = process.env;
 const port = PORT || 8080;
 
-io.on('connection', (socket) => {
+io.on('connect', (socket) => {
     console.log("A new web socket connection.");
 
     socket.on('disconnect', () => {
@@ -24,6 +29,6 @@ io.on('connection', (socket) => {
     });
 });
 
-app.listen(port, () => {
+server.listen(port, () => {
     console.log(`Server is running on port ${port}.`);
 })

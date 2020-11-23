@@ -7,7 +7,7 @@ import { useForm } from "../../utils/hooks";
 import ChatSideBar from "./ChatSideBar";
 import ChatHeader from "./ChatHeader";
 
-const ENDPOINT = "http://localhost:8080";
+const ENDPOINT = "http://localhost:8080/";
 
 const initInputs = Object.freeze({
   message: "",
@@ -20,8 +20,8 @@ export default function Chat({ location }) {
   const { room, username } = params.current;
 
   useEffect(() => {
-    console.log("Here");
     socket = io(ENDPOINT);
+    console.log(socket);
   }, [ENDPOINT, location.search]);
 
   const { onChange, onSubmit, inputs } = useForm(

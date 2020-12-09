@@ -1,17 +1,15 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import qs from "query-string";
 import io from "socket.io-client";
 
-import "./index.css";
-import { useForm } from "../../utils/hooks";
 import ChatSideBar from "./ChatSideBar";
 import ChatHeader from "./ChatHeader";
+import ChatMessages from "./ChatMessages";
+import ChatInput from "./ChatInput";
+
+import "./Chat.css";
 
 const ENDPOINT = "http://localhost:8080/";
-
-const initInputs = Object.freeze({
-  message: "",
-});
 
 let socket;
 
@@ -19,40 +17,49 @@ export default function Chat({ location }) {
   const params = useRef(qs.parse(location.search));
   const { room, username } = params.current;
 
+  const [messages, setMessages]: any = useState([]);
+  const [users, setUsers]: any = useState([]);
+
   useEffect(() => {
     socket = io(ENDPOINT);
-    console.log(socket);
+    socket.emit("join", { username, room }, (error) => {
+      if (error) {
+        alert(error);
+      }
+    });
+
+    return () => {
+      socket.emit("disconnect");
+      socket.off();
+    };
   }, [ENDPOINT, location.search]);
 
-  const { onChange, onSubmit, inputs } = useForm(
-    () => console.log("Thank you come again.", inputs),
-    { ...initInputs }
-  );
+  useEffect(() => {
+    socket.on("message", (message: any) => {
+      setMessages([...messages, message]);
+    });
+  }, [messages]);
+
+  useEffect(() => {
+    socket.on("roomData", ({ users }) => {
+      setUsers(users);
+    });
+  }, [users]);
+
+  function sendMessage(message, setMessage) {
+    message &&
+      message !== "" &&
+      socket.emit("sendMessage", message, () => setMessage({ message: "" }));
+  }
 
   return (
     <div className="chat-container">
       <ChatHeader />
       <main className="chat-main">
-        <ChatSideBar room={room} />
-        <div className="chat-messages"></div>
+        <ChatSideBar {...{ room, users }} />
+        <ChatMessages {...{ messages }} />
       </main>
-      <div className="chat-form-container">
-        <form id="chat-form" onSubmit={onSubmit}>
-          <input
-            id="msg"
-            name="message"
-            type="text"
-            placeholder="Enter Message"
-            value={inputs.message}
-            required
-            autoComplete="off"
-            onChange={onChange}
-          />
-          <button className="btn">
-            <i className="fas fa-paper-plane"></i> Send
-          </button>
-        </form>
-      </div>
+      <ChatInput {...{ sendMessage }} />
     </div>
   );
 }

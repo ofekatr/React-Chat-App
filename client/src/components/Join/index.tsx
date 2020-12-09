@@ -14,7 +14,7 @@ export default function Join(props) {
   );
   const rooms = useRef(getRooms());
 
-  const { onChange, onSubmit, inputs, setInputs } = useForm(() => joinChat(), {
+  const { onChange, onSubmit, inputs } = useForm(() => joinChat(), {
     ...initState.current,
   });
 
